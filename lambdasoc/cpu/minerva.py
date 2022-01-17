@@ -1,7 +1,7 @@
-from nmigen import *
-from nmigen_soc import wishbone
+from amaranth import *
+from amaranth_soc import wishbone
 
-from minerva.core import Minerva
+from thirdparty.minerva.core import Minerva
 
 from . import CPU
 

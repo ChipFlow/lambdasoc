@@ -2,6 +2,7 @@ import os
 
 from .base import *
 from ..cpu import CPU
+from ..periph.base import Peripheral
 from ..periph.intc import InterruptController
 from ..periph.sram import SRAMPeripheral
 from ..periph.sdram import SDRAMPeripheral
@@ -15,7 +16,7 @@ __all__ = ["CPUSoC", "BIOSBuilder"]
 class CPUSoC(SoC):
     cpu    = socproperty(CPU)
     intc   = socproperty(InterruptController)
-    rom    = socproperty(SRAMPeripheral)
+    rom    = socproperty(Peripheral)
     ram    = socproperty(SRAMPeripheral)
     sdram  = socproperty(SDRAMPeripheral, weak=True)
     uart   = socproperty(AsyncSerialPeripheral)
@@ -43,7 +44,7 @@ class CPUSoC(SoC):
             with open(bios_filename, "rb") as f:
                 words = iter(lambda: f.read(self.cpu.data_width // 8), b'')
                 bios  = [int.from_bytes(w, self.cpu.byteorder) for w in words]
-        self.rom.init = bios
+        # self.rom.init = bios
 
 
 class BIOSBuilder(ConfigBuilder):
@@ -60,14 +61,14 @@ class BIOSBuilder(ConfigBuilder):
             {% else %}
             CONFIG_{{soc.cpu.arch.upper()}}_MULDIV_SOFT=n
             {% endif %}
-            CONFIG_ROM_START={{hex(periph_addr(soc.rom))}}
+            CONFIG_ROM_START={{hex(soc.cpu.reset_addr)}}
             CONFIG_ROM_SIZE={{hex(soc.rom.size)}}
             CONFIG_RAM_START={{hex(periph_addr(soc.ram))}}
             CONFIG_RAM_SIZE={{hex(soc.ram.size)}}
             CONFIG_UART_START={{hex(periph_addr(soc.uart))}}
             CONFIG_UART_IRQNO={{soc.intc.find_index(soc.uart.irq)}}
-            CONFIG_UART_RX_RINGBUF_SIZE_LOG2=7
-            CONFIG_UART_TX_RINGBUF_SIZE_LOG2=7
+            CONFIG_UART_RX_RINGBUF_SIZE_LOG2=2
+            CONFIG_UART_TX_RINGBUF_SIZE_LOG2=2
             CONFIG_TIMER_START={{hex(periph_addr(soc.timer))}}
             CONFIG_TIMER_IRQNO={{soc.intc.find_index(soc.timer.irq)}}
             CONFIG_TIMER_CTR_WIDTH={{soc.timer.width}}
